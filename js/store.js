@@ -104,6 +104,20 @@ export async function getProgress(uid, max = 30) {
   return snap.docs.map((d) => d.data());
 }
 
+// ── 앱 학습 상태 (SRS/체크리스트/스트릭 등) ────────────
+export async function getAppState(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? snap.data().appState || null : null;
+}
+
+export async function saveAppState(uid, state) {
+  await setDoc(
+    doc(db, "users", uid),
+    { appState: state, stateUpdatedAt: serverTimestamp() },
+    { merge: true }
+  );
+}
+
 // ── 회화 세션 저장 ─────────────────────────────────────
 export async function saveChat(uid, sessionId, messages) {
   await setDoc(doc(db, "users", uid, "chats", sessionId), {
