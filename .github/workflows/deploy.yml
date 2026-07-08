@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/language-learning-webapp-usccfq
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시 배포 방지
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject Gemini API key
+        env:
+          GEMINY_KEY: ${{ secrets.GEMINY_KEY }}
+        run: |
+          if [ -n "$GEMINY_KEY" ]; then
+            # config.js 의 플레이스홀더를 시크릿 값으로 치환
+            python3 - <<'PY'
+          import os, io
+          key = os.environ["GEMINY_KEY"]
+          path = "js/config.js"
+          with io.open(path, "r", encoding="utf-8") as f:
+              content = f.read()
+          content = content.replace("__GEMINI_API_KEY__", key)
+          with io.open(path, "w", encoding="utf-8") as f:
+              f.write(content)
+          print("Gemini API key injected.")
+          PY
+          else
+            echo "::warning::GEMINY_KEY secret is not set. 사용자가 앱 설정에서 직접 키를 입력해야 합니다."
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
