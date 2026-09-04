@@ -19,6 +19,8 @@ function defaultState() {
     checklist: {},        // date -> { itemIdx: true }
     activity: [],         // 학습한 날짜 목록 (스트릭 계산용)
     collected: [],        // 수집한 문장 (몰입 환경용)
+    opic: {},             // scriptId -> { stage: 최고 클리어 단계(1~5), at }
+    opicCustom: [],       // 사용자가 직접 만든 스크립트
   };
 }
 
@@ -159,6 +161,50 @@ export function streak() {
     d = addDays(d, -1);
   }
   return count;
+}
+
+// ── 오픽 암기 진도 ─────────────────────────────────────
+// stage: 1 듣기 · 2 문장암기 · 3 빈칸 · 4 키워드 · 5 암송(완료)
+export function opicClear(scriptId, stage) {
+  const cur = S.opic[scriptId]?.stage || 0;
+  S.opic[scriptId] = { stage: Math.max(cur, stage), at: today() };
+  markActivity();
+  persist();
+}
+
+export function opicStage(scriptId) {
+  return S.opic[scriptId]?.stage || 0;
+}
+
+export function opicStats(allIds) {
+  let done = 0;
+  let started = 0;
+  for (const id of allIds) {
+    const st = S.opic[id]?.stage || 0;
+    if (st >= 5) done++;
+    else if (st > 0) started++;
+  }
+  return { done, started, total: allIds.length };
+}
+
+// ── 내 스크립트 (사용자 작성) ──────────────────────────
+export function addCustomScript(script) {
+  S.opicCustom.unshift(script);
+  persist();
+}
+
+export function updateCustomScript(id, patch) {
+  const i = S.opicCustom.findIndex((s) => s.id === id);
+  if (i >= 0) {
+    S.opicCustom[i] = { ...S.opicCustom[i], ...patch };
+    persist();
+  }
+}
+
+export function deleteCustomScript(id) {
+  S.opicCustom = S.opicCustom.filter((s) => s.id !== id);
+  delete S.opic[id];
+  persist();
 }
 
 // ── 문장 수집 ──────────────────────────────────────────

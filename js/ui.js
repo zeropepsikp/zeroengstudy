@@ -33,6 +33,7 @@ const NAV = [
   ["vocab", "📚", "어휘 트레이닝", "#/vocab"],
   ["grammar", "🧩", "실전 문법", "#/grammar"],
   ["speaking", "🎙️", "말하기·발음", "#/speaking"],
+  ["opic", "🎤", "오픽 스크립트", "#/opic"],
   ["immersion", "🌊", "몰입 환경", "#/immersion"],
   ["progress", "📈", "진도 관리", "#/progress"],
   ["chat", "💬", "AI 회화 파트너", "#/chat"],

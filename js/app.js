@@ -15,6 +15,8 @@ import { renderRoadmap } from "./views/roadmapView.js";
 import { renderImmersion } from "./views/immersionView.js";
 import { renderProgress } from "./views/progressView.js";
 import { renderChat } from "./views/chatView.js";
+import { renderOpicList, renderOpicScript } from "./views/opicView.js";
+import { OPIC_SCRIPTS } from "./data/opic.js";
 
 const app = document.getElementById("app");
 let USER = null;
@@ -45,9 +47,12 @@ window.addEventListener("hashchange", () => {
 // ── 라우팅 ────────────────────────────────────────────
 function route() {
   setShellCtx({ user: USER, profile: PROFILE, onLogout: () => logout() });
-  const [view, p1] = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+  const [view, p1, p2] = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
   switch (view) {
     case "roadmap": return renderRoadmap();
+    case "opic":
+      if (p1 === "s" && p2) return renderOpicScript(p2);
+      return renderOpicList(p1 || "scripts");
     case "vocab":
       if (p1 === "review") return renderVocabReview();
       if (p1 === "unit") {
@@ -148,6 +153,7 @@ function renderDashboard() {
   const doneCount = Object.keys(checked).length;
   const totalMin = routine.reduce((s, r) => s + r[0], 0);
   const missionIdx = (day - 1) % DAILY_MISSIONS.length;
+  const opicDone = OPIC_SCRIPTS.filter((s) => (S.opic[s.id]?.stage || 0) >= 5).length;
 
   const routineHtml = routine
     .map(
@@ -204,6 +210,7 @@ function renderDashboard() {
         <a class="card" href="#/vocab"><div class="card-icon">📚</div><h3>어휘 트레이닝</h3><p class="card-desc">${Object.keys(S.unitsDone).length}/${VOCAB_UNITS.length} 유닛 완료</p></a>
         <a class="card" href="#/grammar"><div class="card-icon">🧩</div><h3>실전 문법</h3><p class="card-desc">${Object.keys(S.grammarDone).length}/${GRAMMAR_PATTERNS.length} 패턴 완료</p></a>
         <a class="card" href="#/speaking"><div class="card-icon">🎙️</div><h3>말하기·발음</h3><p class="card-desc">쉐도잉 · 발음 · 롤플레이</p></a>
+        <a class="card" href="#/opic"><div class="card-icon">🎤</div><h3>오픽 스크립트</h3><p class="card-desc">${opicDone}/${OPIC_SCRIPTS.length} 암송 완료</p></a>
         <a class="card" href="#/chat"><div class="card-icon">💬</div><h3>AI 회화</h3><p class="card-desc">${getGeminiKey() ? "프리토킹 연습 가능" : "설정에서 키 등록 필요"}</p></a>
       </div>
     </div>`);
